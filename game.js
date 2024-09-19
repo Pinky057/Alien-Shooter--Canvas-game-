@@ -4,10 +4,18 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// Define the game area (inside the dashed border)
+const gameArea = {
+  x: 50, // Left padding
+  y: 50, // Top padding
+  width: canvas.width - 100, // Right padding (subtracting from total width)
+  height: canvas.height - 100, // Bottom padding
+};
+
 // Game Variables
 let spaceship = {
-  x: canvas.width / 2 - 40, // Adjusted x position for the UFO
-  y: canvas.height - 100, // Adjusted y position for UFO height
+  x: gameArea.width / 2 - 40, // Adjusted x position for the UFO inside game area
+  y: gameArea.height - 80, // Adjusted y position for UFO inside game area
   width: 80,
   height: 40,
   speed: 10,
@@ -39,10 +47,13 @@ window.addEventListener("keyup", function (e) {
 });
 
 function moveSpaceship() {
-  if (spaceship.movingLeft && spaceship.x > 0) {
+  if (spaceship.movingLeft && spaceship.x > gameArea.x) {
     spaceship.x -= spaceship.speed;
   }
-  if (spaceship.movingRight && spaceship.x < canvas.width - spaceship.width) {
+  if (
+    spaceship.movingRight &&
+    spaceship.x < gameArea.x + gameArea.width - spaceship.width
+  ) {
     spaceship.x += spaceship.speed;
   }
 }
@@ -93,12 +104,21 @@ function drawUFO() {
   }
 }
 
+// Dashed Border (RPG Style)
+function drawDashedBorder() {
+  ctx.setLineDash([10, 10]); // Create a dashed line (10px dash, 10px gap)
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "#FFFFFF"; // White border
+  ctx.strokeRect(gameArea.x, gameArea.y, gameArea.width, gameArea.height); // Draw the border around the game area
+  ctx.setLineDash([]); // Reset to solid lines for other drawings
+}
+
 // Retro Night Sky Background
 function createStars() {
   for (let i = 0; i < 100; i++) {
     stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: gameArea.x + Math.random() * gameArea.width, // Stars within the game area
+      y: gameArea.y + Math.random() * gameArea.height,
       radius: Math.random() * 2,
     });
   }
@@ -137,24 +157,22 @@ function moveBullets() {
   }
 
   // Remove bullets that go off the screen
-  bullets = bullets.filter((bullet) => bullet.y > 0);
+  bullets = bullets.filter((bullet) => bullet.y > gameArea.y);
 }
 
 // Aliens with random colors and new shapes
 function createAliens() {
   for (let row = 0; row < alienRows; row++) {
     for (let col = 0; col < alienCols; col++) {
-      // Generate a random color for each alien
       let color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(
         Math.random() * 256
       )}, ${Math.floor(Math.random() * 256)})`;
-
       aliens.push({
-        x: col * 80 + 50,
-        y: row * 60 + 30,
+        x: gameArea.x + col * 80 + 50,
+        y: gameArea.y + row * 60 + 30,
         width: 40,
         height: 40,
-        color: color, // Assign random color to the alien
+        color: color, // Random color for each alien
         destroyed: false,
       });
     }
@@ -164,7 +182,6 @@ function createAliens() {
 function drawAliens() {
   for (let alien of aliens) {
     if (!alien.destroyed) {
-      // Alien body (circle)
       ctx.fillStyle = alien.color;
       ctx.beginPath();
       ctx.arc(
@@ -177,19 +194,18 @@ function drawAliens() {
       ctx.fill();
       ctx.closePath();
 
-      // Alien antenna (lines)
+      // Antenna and eyes (details)
       ctx.strokeStyle = "black";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(alien.x + alien.width / 2 - 10, alien.y); // Left antenna
+      ctx.moveTo(alien.x + alien.width / 2 - 10, alien.y);
       ctx.lineTo(alien.x + alien.width / 2 - 20, alien.y - 20);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(alien.x + alien.width / 2 + 10, alien.y); // Right antenna
+      ctx.moveTo(alien.x + alien.width / 2 + 10, alien.y);
       ctx.lineTo(alien.x + alien.width / 2 + 20, alien.y - 20);
       ctx.stroke();
 
-      // Alien eyes (small circles)
       ctx.fillStyle = "white";
       ctx.beginPath();
       ctx.arc(
@@ -198,7 +214,7 @@ function drawAliens() {
         5,
         0,
         Math.PI * 2
-      ); // Left eye
+      );
       ctx.fill();
       ctx.beginPath();
       ctx.arc(
@@ -207,7 +223,7 @@ function drawAliens() {
         5,
         0,
         Math.PI * 2
-      ); // Right eye
+      );
       ctx.fill();
     }
   }
@@ -218,16 +234,15 @@ function moveAliens() {
     alien.x += alienSpeed * alienDirection;
   }
 
-  // Reverse direction and drop down if aliens hit the edge of the screen
   let hitEdge = aliens.some(
     (alien) =>
-      (alien.x <= 0 && !alien.destroyed) ||
-      (alien.x + alien.width >= canvas.width && !alien.destroyed)
+      (alien.x <= gameArea.x && !alien.destroyed) ||
+      (alien.x + alien.width >= gameArea.x + gameArea.width && !alien.destroyed)
   );
   if (hitEdge) {
-    alienDirection *= -1; // Reverse direction
+    alienDirection *= -1;
     for (let alien of aliens) {
-      alien.y += 40; // Move the aliens down
+      alien.y += 40;
     }
   }
 }
@@ -242,16 +257,14 @@ function detectCollisions() {
         bullet.y < alien.y + alien.height &&
         bullet.y + bullet.height > alien.y
       ) {
-        // Collision detected
         alien.destroyed = true;
-        bullet.y = -10; // Move the bullet off-screen
+        bullet.y = -10;
         score += 10;
       }
     }
   }
 }
 
-// Game Over and Victory
 function checkGameOver() {
   for (let alien of aliens) {
     if (!alien.destroyed && alien.y + alien.height >= spaceship.y) {
@@ -280,6 +293,8 @@ function restartGame() {
 function gameLoop() {
   if (!gameOver) {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+    drawDashedBorder(); // Draw the dashed border
 
     drawStars(); // Draw the retro night sky background
 
