@@ -8,8 +8,8 @@ canvas.height = window.innerHeight;
 let spaceship = {
   x: canvas.width / 2 - 40, // Adjusted x position for the UFO
   y: canvas.height - 100, // Adjusted y position for UFO height
-  width: 80, // Wider UFO
-  height: 40, // Taller UFO
+  width: 80,
+  height: 40,
   speed: 10,
   movingLeft: false,
   movingRight: false,
@@ -20,9 +20,11 @@ let aliens = [];
 let alienRows = 3;
 let alienCols = 7;
 let alienSpeed = 2;
-let alienDirection = 1; // 1 = right, -1 = left
+let alienDirection = 1;
 let gameOver = false;
 let score = 0;
+let stars = [];
+let restartButton = document.getElementById("restartButton");
 
 // Spaceship Movement
 window.addEventListener("keydown", function (e) {
@@ -88,6 +90,26 @@ function drawUFO() {
     );
     ctx.fill();
     ctx.closePath();
+  }
+}
+
+// Retro Night Sky Background
+function createStars() {
+  for (let i = 0; i < 100; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2,
+    });
+  }
+}
+
+function drawStars() {
+  ctx.fillStyle = "white";
+  for (let star of stars) {
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -238,20 +260,28 @@ function checkGameOver() {
   }
 
   if (aliens.every((alien) => alien.destroyed)) {
-    alert("You Win! Score: " + score);
-    document.location.reload();
+    displayRestartButton();
   }
 
   if (gameOver) {
-    alert("Game Over! Score: " + score);
-    document.location.reload();
+    displayRestartButton();
   }
+}
+
+function displayRestartButton() {
+  restartButton.style.display = "block"; // Show the restart button
+}
+
+function restartGame() {
+  document.location.reload(); // Reload the page to restart the game
 }
 
 // Main Game Loop
 function gameLoop() {
   if (!gameOver) {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+    drawStars(); // Draw the retro night sky background
 
     moveSpaceship();
     moveBullets();
@@ -268,5 +298,6 @@ function gameLoop() {
 }
 
 // Initialize the game
-createAliens();
-gameLoop();
+createStars(); // Create stars for background
+createAliens(); // Create aliens
+gameLoop(); // Start the game
