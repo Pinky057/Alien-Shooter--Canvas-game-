@@ -6,10 +6,10 @@ canvas.height = window.innerHeight;
 
 // Game Variables
 let spaceship = {
-  x: canvas.width / 2 - 25,
-  y: canvas.height - 80,
-  width: 50,
-  height: 50,
+  x: canvas.width / 2 - 40, // Adjusted x position for the UFO
+  y: canvas.height - 100, // Adjusted y position for UFO height
+  width: 80, // Wider UFO
+  height: 40, // Taller UFO
   speed: 10,
   movingLeft: false,
   movingRight: false,
@@ -45,15 +45,56 @@ function moveSpaceship() {
   }
 }
 
-function drawSpaceship() {
-  ctx.fillStyle = "white";
-  ctx.fillRect(spaceship.x, spaceship.y, spaceship.width, spaceship.height);
+// Draw the UFO spaceship
+function drawUFO() {
+  // Draw the UFO body (base)
+  ctx.fillStyle = "silver";
+  ctx.beginPath();
+  ctx.ellipse(
+    spaceship.x + spaceship.width / 2,
+    spaceship.y + spaceship.height / 2,
+    40,
+    20,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.closePath();
+
+  // Draw the dome (top)
+  ctx.fillStyle = "lightblue";
+  ctx.beginPath();
+  ctx.arc(
+    spaceship.x + spaceship.width / 2,
+    spaceship.y + spaceship.height / 2 - 10,
+    15,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.closePath();
+
+  // Draw lights on the UFO base
+  ctx.fillStyle = "yellow";
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.arc(
+      spaceship.x + 10 + i * 15,
+      spaceship.y + spaceship.height - 5,
+      5,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    ctx.closePath();
+  }
 }
 
 // Bullets
 function shootBullet() {
   bullets.push({
-    x: spaceship.x + spaceship.width / 2 - 2.5, // Center of the spaceship
+    x: spaceship.x + spaceship.width / 2 - 2.5, // Center of the UFO
     y: spaceship.y,
     width: 5,
     height: 10,
@@ -77,15 +118,21 @@ function moveBullets() {
   bullets = bullets.filter((bullet) => bullet.y > 0);
 }
 
-// Aliens
+// Aliens with random colors and new shapes
 function createAliens() {
   for (let row = 0; row < alienRows; row++) {
     for (let col = 0; col < alienCols; col++) {
+      // Generate a random color for each alien
+      let color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(
+        Math.random() * 256
+      )}, ${Math.floor(Math.random() * 256)})`;
+
       aliens.push({
         x: col * 80 + 50,
         y: row * 60 + 30,
         width: 40,
         height: 40,
+        color: color, // Assign random color to the alien
         destroyed: false,
       });
     }
@@ -93,10 +140,53 @@ function createAliens() {
 }
 
 function drawAliens() {
-  ctx.fillStyle = "green";
   for (let alien of aliens) {
     if (!alien.destroyed) {
-      ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
+      // Alien body (circle)
+      ctx.fillStyle = alien.color;
+      ctx.beginPath();
+      ctx.arc(
+        alien.x + alien.width / 2,
+        alien.y + alien.height / 2,
+        alien.width / 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.closePath();
+
+      // Alien antenna (lines)
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(alien.x + alien.width / 2 - 10, alien.y); // Left antenna
+      ctx.lineTo(alien.x + alien.width / 2 - 20, alien.y - 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(alien.x + alien.width / 2 + 10, alien.y); // Right antenna
+      ctx.lineTo(alien.x + alien.width / 2 + 20, alien.y - 20);
+      ctx.stroke();
+
+      // Alien eyes (small circles)
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(
+        alien.x + alien.width / 2 - 10,
+        alien.y + alien.height / 2 - 5,
+        5,
+        0,
+        Math.PI * 2
+      ); // Left eye
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(
+        alien.x + alien.width / 2 + 10,
+        alien.y + alien.height / 2 - 5,
+        5,
+        0,
+        Math.PI * 2
+      ); // Right eye
+      ctx.fill();
     }
   }
 }
@@ -169,9 +259,9 @@ function gameLoop() {
     detectCollisions();
     checkGameOver();
 
-    drawSpaceship();
+    drawUFO(); // Draw UFO
     drawBullets();
-    drawAliens();
+    drawAliens(); // Draw updated alien shapes
 
     requestAnimationFrame(gameLoop); // Loop the game
   }
