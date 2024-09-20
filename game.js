@@ -1,4 +1,3 @@
-// Select the canvas element and set its size
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
@@ -286,7 +285,18 @@ function displayRestartButton() {
 }
 
 function restartGame() {
-  document.location.reload(); // Reload the page to restart the game
+  // Reset all variables for the game
+  spaceship.x = gameArea.width / 2 - 40;
+  spaceship.y = gameArea.height - 80;
+  bullets = [];
+  aliens = [];
+  score = 0;
+  gameOver = false;
+  restartButton.style.display = "none"; // Hide the restart button again
+
+  // Recreate aliens and start the game loop again
+  createAliens();
+  gameLoop();
 }
 
 // Main Game Loop
